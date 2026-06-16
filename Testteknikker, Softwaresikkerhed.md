@@ -63,15 +63,19 @@ Hver række angiver én inputklasse og ét forventet testresultat.
 
 ### **2.2. DS1: store mængder falsk data**
 
+Ækvivalensklasserne afgrænser DS1-input efter datamængde i payloaden og gentagen belastning mod endpointet.
+`payloadBytes` angiver payloadens samlede størrelse, mens `hits.length` angiver antallet af AR hits i payloaden.
+De enkelte payloads vurderes mod `MAX_BYTES` og `MAX_HITS`, og gentagne payloads vurderes mod den valgte testgrænse for gentagen belastning.
+
 | Klasse | Input | Forventning |
 |---|---|---|
-| EC-D1 | Payload under `MAX_BYTES` og under `MAX_HITS` | OK |
-| EC-D2 | Payload præcis på `MAX_BYTES` | OK |
-| EC-D3 | Payload over `MAX_BYTES` | PayloadTooLarge |
-| EC-D4 | Antal AR hits præcis på `MAX_HITS` | OK |
-| EC-D5 | Antal AR hits over `MAX_HITS` | PayloadTooLarge |
-| EC-D6 | Gentagne payloads under `MAX_BYTES` og under `MAX_HITS` | OK |
-| EC-D7 | Gentagne payloads hvor samlet mængde medfører kontrolleret afvisning efter valgt testgrænse | PayloadTooLarge eller ResourceLimitExceeded |
+| EC-D1 | `payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | OK |
+| EC-D2 | `payloadBytes = MAX_BYTES && hits.length <= MAX_HITS` | OK |
+| EC-D3 | `payloadBytes > MAX_BYTES` | PayloadTooLarge |
+| EC-D4 | `payloadBytes <= MAX_BYTES && hits.length = MAX_HITS` | OK |
+| EC-D5 | `payloadBytes <= MAX_BYTES && hits.length > MAX_HITS` | PayloadTooLarge |
+| EC-D6 | `payloadBytes < MAX_BYTES && hits.length < MAX_HITS` gentaget under valgt testgrænse | OK |
+| EC-D7 | `payloadBytes < MAX_BYTES && hits.length < MAX_HITS` gentaget over valgt testgrænse | PayloadTooLarge eller ResourceLimitExceeded |
 
 ---
 
@@ -79,12 +83,16 @@ Hver række angiver én inputklasse og ét forventet testresultat.
 
 ### **3.1. T1: `hits` længde**
 
+ Afprøver minimumskravet for antallet af AR hits i en `MeasurementPayload`.
+`hits.length` angiver antallet af AR hits i payloaden, og payloaden skal indeholde mindst et AR hit.
+
 Krav: `hits.length >= 1`
 
 | Test | Input | Forventning |
 |---|---|---|
 | BV-TL1 | `hits.length = 0` | ValueError |
 | BV-TL2 | `hits.length = 1` | OK |
+| BV-TL3 | `hits.length = 2` | OK |
 
 ### **3.2. T1: ARHIT-koordinatværdi**
 Denne grænseværditest tester koordinatfelterne i et `ARHit`. 
