@@ -3,7 +3,6 @@
 ## **1. Domæne**
 
 ### **1.1. Testobjekt**
-Primært endpoint:
 
 | Endpoint | Formål | Relevante trusler |
 |---|---|---|
