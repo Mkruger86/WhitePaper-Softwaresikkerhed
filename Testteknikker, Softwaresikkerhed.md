@@ -44,9 +44,9 @@ DS1: Den ondsindede aktør sender store mængder falsk data til Firestore, så a
 
 ### **2.1. T1: gyldighed af AR hits**
 
-Ækvivalensklasserne tester inputkontrakten for `MeasurementPayload` og de enkelte `ARHit`-objekter i `hits`.
+validerer inputkontrakten for `MeasurementPayload` og de enkelte `ARHit`-objekter i `hits`.
 T1 dækker ugyldige AR hits, hvor payloaden skal afvises før registrering.
-Hver række angiver én inputklasse og ét forventet testresultat.
+Hver række angiver en inputklasse og et forventet testresultat.
 
 | Klasse | Input | Forventning |
 |---|---|---|
@@ -65,7 +65,7 @@ Hver række angiver én inputklasse og ét forventet testresultat.
 
 Ækvivalensklasserne afgrænser DS1-input efter datamængde i payloaden og gentagen belastning mod endpointet.
 `payloadBytes` angiver payloadens samlede størrelse, mens `hits.length` angiver antallet af AR hits i payloaden.
-De enkelte payloads vurderes mod `MAX_BYTES` og `MAX_HITS`, og gentagne payloads vurderes mod den valgte testgrænse for gentagen belastning.
+De enkelte payloads vurderes mod `MAX_BYTES` og `MAX_HITS`, og gentagne payloads vurderes mod `REPEAT_LIMIT`.
 
 | Klasse | Input | Forventning |
 |---|---|---|
@@ -74,8 +74,8 @@ De enkelte payloads vurderes mod `MAX_BYTES` og `MAX_HITS`, og gentagne payloads
 | EC-D3 | `payloadBytes > MAX_BYTES` | PayloadTooLarge |
 | EC-D4 | `payloadBytes <= MAX_BYTES && hits.length = MAX_HITS` | OK |
 | EC-D5 | `payloadBytes <= MAX_BYTES && hits.length > MAX_HITS` | PayloadTooLarge |
-| EC-D6 | `payloadBytes < MAX_BYTES && hits.length < MAX_HITS` gentaget under valgt testgrænse | OK |
-| EC-D7 | `payloadBytes < MAX_BYTES && hits.length < MAX_HITS` gentaget over valgt testgrænse | PayloadTooLarge eller ResourceLimitExceeded |
+| EC-D6 | `repeatCount < REPEAT_LIMIT && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | OK |
+| EC-D7 | `repeatCount > REPEAT_LIMIT && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | ResourceLimitExceeded 
 
 ---
 
@@ -83,7 +83,7 @@ De enkelte payloads vurderes mod `MAX_BYTES` og `MAX_HITS`, og gentagne payloads
 
 ### **3.1. T1: `hits` længde**
 
- Afprøver minimumskravet for antallet af AR hits i en `MeasurementPayload`.
+ test af minimumskravet for antallet af AR hits i en `MeasurementPayload`.
 `hits.length` angiver antallet af AR hits i payloaden, og payloaden skal indeholde mindst et AR hit.
 
 Krav: `hits.length >= 1`
@@ -95,7 +95,7 @@ Krav: `hits.length >= 1`
 | BV-TL3 | `hits.length = 2` | OK |
 
 ### **3.2. T1: ARHIT-koordinatværdi**
-Denne grænseværditest tester koordinatfelterne i et `ARHit`. 
+Tester koordinatfelterne i et `ARHit`. 
 Et `ARHit` indeholder koordinaterne `x`, `y` og `z`, og hvert koordinatfelt skal ligge inden for det tilladte interval.
 
 Krav: `coordinatesValid = true`
@@ -130,13 +130,17 @@ Krav: `payloadBytes <= MAX_BYTES`
 
 ### **3.5. DS1: gentagne payloads**
 
-Krav: gentagne payloads må ikke medføre ukontrolleret datamængde mod Firestore
+tester grænsen for gentagen belastning mod endpointet.
+`repeatCount` angiver antallet af gentagne payloads i testforløbet.
+Hver payload holdes under `MAX_BYTES` og `MAX_HITS`, så testen isolerer belastningen fra gentagelser.
+
+Krav: `repeatCount <= REPEAT_LIMIT`
 
 | Test | Input | Forventning |
 |---|---|---|
-| BV-DR1 | Gentagne payloads under valgt testgrænse | OK |
-| BV-DR2 | Gentagne payloads præcis på valgt testgrænse | OK |
-| BV-DR3 | Gentagne payloads over valgt testgrænse | PayloadTooLarge eller ResourceLimitExceeded |
+| BV-DR1 | `repeatCount = REPEAT_LIMIT - 1 && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | OK |
+| BV-DR2 | `repeatCount = REPEAT_LIMIT && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | OK |
+| BV-DR3 | `repeatCount = REPEAT_LIMIT + 1 && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | ResourceLimitExceeded ||
 
 ---
 
