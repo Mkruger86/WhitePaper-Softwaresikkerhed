@@ -95,11 +95,11 @@ Krav: `MIN_COORD <= coordinate <= MAX_COORD`
 
 | Test | Input | Forventning |
 |---|---|---|
-| BV-TC1 | `coordinate = MIN_COORD - 1` | ValueError |
+| BV-TC1 | `coordinate = MIN_COORD - 1.0` | ValueError |
 | BV-TC2 | `coordinate = MIN_COORD` | OK |
 | BV-TC3 | `coordinate = 0` | OK |
 | BV-TC4 | `coordinate = MAX_COORD` | OK |
-| BV-TC5 | `coordinate = MAX_COORD + 1` | ValueError |
+| BV-TC5 | `coordinate = MAX_COORD + 1.0` | ValueError |
 
 ### **3.3. DS1: antal AR hits pr. request**
 
