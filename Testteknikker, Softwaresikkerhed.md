@@ -75,7 +75,7 @@ De enkelte payloads vurderes mod `MAX_BYTES` og `MAX_HITS`, og gentagne payloads
 | EC-D4 | `payloadBytes <= MAX_BYTES && hits.length = MAX_HITS` | OK |
 | EC-D5 | `payloadBytes <= MAX_BYTES && hits.length > MAX_HITS` | PayloadTooLarge |
 | EC-D6 | `repeatCount <= REPEAT_LIMIT && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | OK |
-| EC-D7 | `repeatCount > REPEAT_LIMIT && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | ResourceLimitExceeded 
+| EC-D7 | `repeatCount > REPEAT_LIMIT && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | ResourceLimitExceeded | 
 
 ---
 
@@ -197,24 +197,24 @@ Handling:
 
 Entity: `MeasurementRecord { id, hits, createdAt }`
 
-CRUD(L) bruges her til at teste oprettelse, efterfølgende læsning og kontrol af, at afviste payloads ikke lagres i test repository. T1 og DS1 behandles som separate trusler: T1 afvises på grund af ugyldige AR hits, mens DS1 afvises på grund af datamængde.
+CRUD(L) bruges her til at teste oprettelse, efterfølgende læsning og kontrol af, at afviste payloads ikke lagres i test repository. T1 afvises på grund af ugyldige AR hits, mens DS1 afvises på grund af datamængde.
 
 | ID | Operation | Input | Forventning | Trussel |
 |---|---|---|---|---|
-| CRUD-T1 | CREATE | Payload hvor `hits` mangler | ValueError, ingen lagring | T1 |
-| CRUD-T2 | CREATE | Payload med tom `hits` liste | ValueError, ingen lagring | T1 |
-| CRUD-T3 | CREATE | Payload med ugyldig koordinat | ValueError, ingen lagring | T1 |
-| CRUD-T4 | CREATE | Payload med ukendt `hitType` | ValueError, ingen lagring | T1 |
-| CRUD-T5 | CREATE | Gyldig målepayload med gyldige AR hits | Success | T1 |
-| CRUD-D1 | CREATE | Payload med for mange AR hits | PayloadTooLarge, ingen lagring | DS1 |
-| CRUD-D2 | CREATE | Payload over `MAX_BYTES` | PayloadTooLarge, ingen lagring | DS1 |
-| CRUD-D3 | CREATE | Gentagne payloads over valgt testgrænse | ResourceLimitExceeded, ingen lagring af afvist payload | DS1 |
-| CRUD-R1 | READ | Eksisterende måling oprettet fra gyldig payload | Success | T1 |
-| CRUD-R2 | READ | Id fra afvist T1 payload | NotFound eller intet id oprettet | T1 |
-| CRUD-R3 | READ | Id fra afvist DS1 payload | NotFound eller intet id oprettet | DS1 |
+| CRUD-T1 | CREATE | `hits` mangler | ValueError, ingen lagring | T1 |
+| CRUD-T2 | CREATE | `hits.length = 0` | ValueError, ingen lagring | T1 |
+| CRUD-T3 | CREATE | `coordinatesValid = false` | ValueError, ingen lagring | T1 |
+| CRUD-T4 | CREATE | `hitType` ukendt | ValueError, ingen lagring | T1 |
+| CRUD-T5 | CREATE | Gyldig målepayload med gyldige AR hits | Success, record oprettes | T1 |
+| CRUD-D1 | CREATE | `hits.length > MAX_HITS` | PayloadTooLarge, ingen lagring | DS1 |
+| CRUD-D2 | CREATE | `payloadBytes > MAX_BYTES` | PayloadTooLarge, ingen lagring | DS1 |
+| CRUD-D3 | CREATE | `repeatCount > REPEAT_LIMIT && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | ResourceLimitExceeded, ingen lagring af afvist payload | DS1 |
+| CRUD-R1 | READ | Id fra oprettet gyldig payload | Success | T1 |
+| CRUD-R2 | READ | Id fra afvist T1-payload | NotFound eller intet id oprettet | T1 |
+| CRUD-R3 | READ | Id fra afvist DS1-payload | NotFound eller intet id oprettet | DS1 |
 | CRUD-L1 | LIST | Efter gyldig oprettelse | Listen indeholder gyldige records | T1 |
-| CRUD-L2 | LIST | Efter afviste T1 payloads | Listen indeholder ikke ugyldige AR hits | T1 |
-| CRUD-L3 | LIST | Efter afviste DS1 payloads | Listen indeholder ikke afviste store payloads | DS1 |
+| CRUD-L2 | LIST | Efter afviste T1-payloads | Listen indeholder ikke ugyldige AR hits | T1 |
+| CRUD-L3 | LIST | Efter afviste DS1-payloads | Listen indeholder ikke afviste store payloads | DS1 |
 
 ---
 
@@ -226,10 +226,10 @@ Cycle: Valid create → Read → Invalid create → List
 
 | Step | Operation | Input | Forventning |
 |---|---|---|---|
-| 1 | `POST /measurements` | Gyldig målepayload med gyldige AR hits | Record oprettes |
+| 1 | `POST /measurements` | `hits.length >= 1 && coordinatesValid = true && hitTypeValid = true && timestampValid = true` | Record oprettes |
 | 2 | `GET /measurements/{id}` | Id fra step 1 | Record kan læses |
-| 3 | `POST /measurements` | Payload med ugyldigt AR hit | Request afvises |
-| 4 | `GET /measurements` | Liste efter step 3 | Afvist payload fremgår ikke |
+| 3 | `POST /measurements` | `coordinatesValid = false` | ValueError, ingen record oprettes |
+| 4 | `GET /measurements` | Liste efter step 3 | Afvist T1-payload fremgår ikke |
 
 ### **6.2. DS1: store mængder falsk data**
 
@@ -237,21 +237,21 @@ Cycle: Under grænse → På grænse → Over grænse → Kontrolleret respons
 
 | Step | Operation | Input | Forventning |
 |---|---|---|---|
-| 1 | `POST /measurements` | Payload under `MAX_HITS` og `MAX_BYTES` | Accepteres |
-| 2 | `POST /measurements` | Payload præcis på `MAX_HITS` eller `MAX_BYTES` | Accepteres |
-| 3 | `POST /measurements` | Payload over `MAX_HITS` eller `MAX_BYTES` | Afvises kontrolleret |
-| 4 | `POST /measurements` | Ny payload under grænserne efter afvisning | Systemet svarer fortsat korrekt |
+| 1 | `POST /measurements` | `payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | Record oprettes |
+| 2 | `POST /measurements` | `payloadBytes <= MAX_BYTES && hits.length <= MAX_HITS && (payloadBytes = MAX_BYTES || hits.length = MAX_HITS)` | Record oprettes |
+| 3 | `POST /measurements` | `payloadBytes > MAX_BYTES || hits.length > MAX_HITS` | PayloadTooLarge, ingen record oprettes |
+| 4 | `POST /measurements` | `payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | Record oprettes |
 
 ### **6.3. DS1: gentagne payloads**
 
-Cycle: Gentagne payloads under grænse → Gentagne payloads på grænse → Gentagne payloads over grænse
+Cycle: Gentagne payloads under grænse → Gentagne payloads på grænse → Gentagne payloads over grænse → List
 
 | Step | Operation | Input | Forventning |
 |---|---|---|---|
-| 1 | `POST /measurements` | Gentagne payloads under valgt testgrænse | Accepteres |
-| 2 | `POST /measurements` | Gentagne payloads præcis på valgt testgrænse | Accepteres |
-| 3 | `POST /measurements` | Gentagne payloads over valgt testgrænse | Afvises kontrolleret |
-| 4 | `GET /measurements` | Liste efter afvisning | Afviste store payloads fremgår ikke |
+| 1 | `POST /measurements` | `repeatCount = REPEAT_LIMIT - 1 && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | Requests accepteres |
+| 2 | `POST /measurements` | `repeatCount = REPEAT_LIMIT && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | Requests accepteres |
+| 3 | `POST /measurements` | `repeatCount = REPEAT_LIMIT + 1 && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | ResourceLimitExceeded, ingen lagring af afvist payload |
+| 4 | `GET /measurements` | Liste efter step 3 | Afviste DS1-payloads fremgår ikke |
 
 ---
 
@@ -259,10 +259,11 @@ Cycle: Gentagne payloads under grænse → Gentagne payloads på grænse → Gen
 
 | Lag | Fokus | Eksempler |
 |---|---|---|
-| Unit | T1: validering af AR hits | `validateRejectsMissingHits`, `validateRejectsEmptyHits`, `validateRejectsInvalidCoordinate`, `validateRejectsUnknownHitType` |
-| Unit | DS1: grænser for datamængde | `validateRejectsTooManyHits`, `validateRejectsPayloadOverMaxBytes` |
-| Integration | T1: endpoint, service og test repository | `postMeasurementInvalidARHitReturnsBadRequest`, `rejectedInvalidARHitIsNotPersisted` |
-| Integration | DS1: endpoint, service og test repository | `postMeasurementTooLargeReturnsRejected`, `rejectedLargePayloadIsNotPersisted` |
-| System/E2E | Fuldt Unity til API til Firestore flow | Uden for den praktiske implementation |
+| Unit | T1: validering af `MeasurementPayload` og `ARHit` | EC-T1, EC-T2, EC-T7, EC-T8, EC-T9 |
+| Unit | DS1: grænser for datamængde og gentagen belastning | EC-D3, EC-D5, EC-D7, BV-DH3, BV-DP3, BV-DR3 |
+| Integration | T1: endpoint, service og test repository | CRUD-T1, CRUD-T2, CRUD-T3, CRUD-T4, CRUD-T5, CRUD-R2, CRUD-L2 |
+| Integration | DS1: endpoint, service og test repository | CRUD-D1, CRUD-D2, CRUD-D3, CRUD-R3, CRUD-L3 |
+| Integration | T1 og DS1: procesflow gennem endpoint og repository | 6.1, 6.2, 6.3 |
+| System/E2E | Fuldt Unity til API til Firestore-flow | Uden for den praktiske implementering |
 
 ---
