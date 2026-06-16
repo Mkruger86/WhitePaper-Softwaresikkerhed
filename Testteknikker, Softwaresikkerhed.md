@@ -74,7 +74,7 @@ De enkelte payloads vurderes mod `MAX_BYTES` og `MAX_HITS`, og gentagne payloads
 | EC-D3 | `payloadBytes > MAX_BYTES` | PayloadTooLarge |
 | EC-D4 | `payloadBytes <= MAX_BYTES && hits.length = MAX_HITS` | OK |
 | EC-D5 | `payloadBytes <= MAX_BYTES && hits.length > MAX_HITS` | PayloadTooLarge |
-| EC-D6 | `repeatCount < REPEAT_LIMIT && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | OK |
+| EC-D6 | `repeatCount <= REPEAT_LIMIT && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | OK |
 | EC-D7 | `repeatCount > REPEAT_LIMIT && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | ResourceLimitExceeded 
 
 ---
@@ -140,7 +140,7 @@ Krav: `repeatCount <= REPEAT_LIMIT`
 |---|---|---|
 | BV-DR1 | `repeatCount = REPEAT_LIMIT - 1 && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | OK |
 | BV-DR2 | `repeatCount = REPEAT_LIMIT && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | OK |
-| BV-DR3 | `repeatCount = REPEAT_LIMIT + 1 && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | ResourceLimitExceeded ||
+| BV-DR3 | `repeatCount = REPEAT_LIMIT + 1 && payloadBytes < MAX_BYTES && hits.length < MAX_HITS` | ResourceLimitExceeded |
 
 ---
 
@@ -151,11 +151,11 @@ Krav: `repeatCount <= REPEAT_LIMIT`
 Betingelser:
 - A1: `hits` findes og er en liste?
 - A2: `hits.length >= 1`?
-- A3: alle AR hits har numeriske koordinater?
-- A4: alle koordinater er finite?
-- A5: alle koordinater ligger inden for tilladt interval?
-- A6: alle AR hits har gyldig `hitType`?
-- A7: alle AR hits har gyldigt `timestamp`?
+- A3: `x`, `y` og `z` er numeriske?
+- A4: `x`, `y` og `z` er finite?
+- A5: `coordinatesValid = true`?
+- A6: `hitType` er gyldig?
+- A7: `timestampValid = true`?
 
 Handling:
 - H1: Accepter payload
@@ -177,7 +177,7 @@ Handling:
 Betingelser:
 - B1: `payloadBytes <= MAX_BYTES`?
 - B2: `hits.length <= MAX_HITS`?
-- B3: gentagne payloads holder sig inden for valgt testgrænse?
+- B3: `repeatCount <= REPEAT_LIMIT`?
 
 Handling:
 - K1: Accepter payload
