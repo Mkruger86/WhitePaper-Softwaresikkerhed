@@ -28,7 +28,7 @@ Primær entity:
 | Felt | Regel |
 |---|---|
 | `x`, `y`, `z` | Skal være numeriske og finite værdier |
-| Koordinater | Skal ligge inden for `MIN_COORD` og `MAX_COORD` |
+| `x`, `y`, `z` | `coordinatesValid = MIN_COORD <= x <= MAX_COORD && MIN_COORD <= y <= MAX_COORD && MIN_COORD <= z <= MAX_COORD` |
 | `hitType` | Skal matche en tilladt type i inputkontrakten |
 | `timestamp` | timestampValid = true → OK; timestampValid = false → ValueError |
 
@@ -42,19 +42,23 @@ DS1: Den ondsindede aktør sender store mængder falsk data til Firestore, så a
 
 ## **2. Ækvivalensklasser**
 
-### **2.1. T1: ugyldige AR hits**
+### **2.1. T1: gyldighed af AR hits**
+
+Ækvivalensklasserne tester inputkontrakten for `MeasurementPayload` og de enkelte `ARHit`-objekter i `hits`.
+T1 dækker ugyldige AR hits, hvor payloaden skal afvises før registrering.
+Hver række angiver én inputklasse og ét forventet testresultat.
 
 | Klasse | Input | Forventning |
 |---|---|---|
 | EC-T1 | `hits` mangler | ValueError |
-| EC-T2 | `hits` er tom liste | ValueError |
+| EC-T2 | `hits.length = 0` | ValueError |
 | EC-T3 | `hits` er ikke en liste | ValueError |
-| EC-T4 | AR hit hvor `x`, `y` eller `z` mangler | ValueError |
-| EC-T5 | AR hit hvor `x`, `y` eller `z` er string, bool eller null | ValueError |
-| EC-T6 | AR hit med `NaN`, `Infinity` eller ikke finite værdi | ValueError |
-| EC-T7 | AR hit med koordinat uden for tilladt interval | ValueError |
-| EC-T8 | AR hit med ukendt `hitType` | ValueError |
-| EC-T9 | AR hit med ugyldigt eller manglende `timestamp` | ValueError |
+| EC-T4 | `x`, `y` eller `z` mangler | ValueError |
+| EC-T5 | `x`, `y` eller `z` er string, bool eller null | ValueError |
+| EC-T6 | `x`, `y` eller `z` er `NaN`, `Infinity` eller ikke-finite | ValueError |
+| EC-T7 | `coordinatesValid = false`  | ValueError |
+| EC-T8 | `hitType` ukendt | ValueError |
+| EC-T9 | `timestampValid = false` | ValueError |
 | EC-T10 | Gyldig målepayload med gyldige AR hits | OK |
 
 ### **2.2. DS1: store mængder falsk data**
@@ -68,13 +72,6 @@ DS1: Den ondsindede aktør sender store mængder falsk data til Firestore, så a
 | EC-D5 | Antal AR hits over `MAX_HITS` | PayloadTooLarge |
 | EC-D6 | Gentagne payloads under `MAX_BYTES` og under `MAX_HITS` | OK |
 | EC-D7 | Gentagne payloads hvor samlet mængde medfører kontrolleret afvisning efter valgt testgrænse | PayloadTooLarge eller ResourceLimitExceeded |
-
-### **2.3. Info**
-
-*Ækvivalensklasserne holdes adskilt efter trussel.  
-For T1 testes ugyldige AR hits gennem manglende felter, forkerte datatyper, ikke finite værdier, ugyldige koordinater, ukendt `hitType` og ugyldigt timestamp.  
-For DS1 testes store mængder falsk data gennem payloadstørrelse, antal AR hits og gentagne payloads.  
-T1 handler om gyldigheden af AR hits. DS1 handler om datamængden, ressourceforbrug, svartider og Firestore kvoter.*
 
 ---
 
@@ -93,6 +90,8 @@ Krav: `hits.length >= 1`
 Denne grænseværditest tester koordinatfelterne i et `ARHit`. 
 Et `ARHit` indeholder koordinaterne `x`, `y` og `z`, og hvert koordinatfelt skal ligge inden for det tilladte interval.
 
+Krav: `coordinatesValid = true`
+
 | Test | Input | Forventning |
 |---|---|---|
 | BV-TC1 | `x = MIN_COORD - 1.0` | ValueError |
@@ -100,14 +99,6 @@ Et `ARHit` indeholder koordinaterne `x`, `y` og `z`, og hvert koordinatfelt skal
 | BV-TC3 | `x = 0` | OK |
 | BV-TC4 | `x = MAX_COORD` | OK |
 | BV-TC5 | `x = MAX_COORD + 1.0` | ValueError |
-
-| Test | Input | Forventning |
-|---|---|---|
-| BV-TC1 | `coordinate = MIN_COORD - 1.0` | ValueError |
-| BV-TC2 | `coordinate = MIN_COORD` | OK |
-| BV-TC3 | `coordinate = 0` | OK |
-| BV-TC4 | `coordinate = MAX_COORD` | OK |
-| BV-TC5 | `coordinate = MAX_COORD + 1.0` | ValueError |
 
 ### **3.3. DS1: antal AR hits pr. request**
 
