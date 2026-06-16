@@ -21,7 +21,7 @@ Primær entity:
 |---|---|
 | `hits` | Skal være en liste med mindst ét AR hit |
 | `hits.length` | Må ikke overstige `MAX_HITS` |
-| Payload størrelse | Må ikke overstige `MAX_BYTES` |
+| payloadBytes <= MAX_BYTES | Må ikke overstige `MAX_BYTES` |
 
 ### **1.3. Regler for `ARHit`**
 
@@ -30,7 +30,7 @@ Primær entity:
 | `x`, `y`, `z` | Skal være numeriske og finite værdier |
 | Koordinater | Skal ligge inden for `MIN_COORD` og `MAX_COORD` |
 | `hitType` | Skal matche en tilladt type i inputkontrakten |
-| `timestamp` | Skal være et gyldigt tidspunkt eller afvises efter valgt kontraktregel |
+| `timestamp` | timestampValid = true → OK; timestampValid = false → ValueError |
 
 ### **1.4. Trusselskobling**
 
@@ -54,7 +54,7 @@ DS1: Den ondsindede aktør sender store mængder falsk data til Firestore, så a
 | EC-T6 | AR hit med `NaN`, `Infinity` eller ikke finite værdi | ValueError |
 | EC-T7 | AR hit med koordinat uden for tilladt interval | ValueError |
 | EC-T8 | AR hit med ukendt `hitType` | ValueError |
-| EC-T9 | AR hit med ugyldigt eller manglende `timestamp` | ValueError eller afvisning efter valgt politik |
+| EC-T9 | AR hit med ugyldigt eller manglende `timestamp` | ValueError |
 | EC-T10 | Gyldig målepayload med gyldige AR hits | OK |
 
 ### **2.2. DS1: store mængder falsk data**
@@ -89,9 +89,17 @@ Krav: `hits.length >= 1`
 | BV-TL1 | `hits.length = 0` | ValueError |
 | BV-TL2 | `hits.length = 1` | OK |
 
-### **3.2. T1: koordinatværdi**
+### **3.2. T1: ARHIT-koordinatværdi**
+Denne grænseværditest tester koordinatfelterne i et `ARHit`. 
+Et `ARHit` indeholder koordinaterne `x`, `y` og `z`, og hvert koordinatfelt skal ligge inden for det tilladte interval.
 
-Krav: `MIN_COORD <= coordinate <= MAX_COORD`
+| Test | Input | Forventning |
+|---|---|---|
+| BV-TC1 | `x = MIN_COORD - 1.0` | ValueError |
+| BV-TC2 | `x = MIN_COORD` | OK |
+| BV-TC3 | `x = 0` | OK |
+| BV-TC4 | `x = MAX_COORD` | OK |
+| BV-TC5 | `x = MAX_COORD + 1.0` | ValueError |
 
 | Test | Input | Forventning |
 |---|---|---|
