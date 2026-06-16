@@ -3,9 +3,6 @@
 ## **1. Domæne**
 
 ### **1.1. Testobjekt**
-
-Testdesignet tager udgangspunkt i et separat API testmiljø, hvor Unity applikationens senere målepayloads repræsenteres gennem kontrollerede requests. Testmiljøet er ikke den operative Firestore tjeneste, men en afgrænset afprøvning af valideringslogik for de data, der ville kunne ende som målepunkter eller store datamængder.
-
 Primært endpoint:
 
 | Endpoint | Formål | Relevante trusler |
