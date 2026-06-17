@@ -6,7 +6,7 @@
 
 | Endpoint | Formål | Relevante trusler |
 |---|---|---|
-| `POST /measurements` | Modtager målepayload med AR hits | T1, DS1 |
+| `POST /measurements` | Modtager payloads indeholdende information om måledata fra AR hits | T1, DS1 |
 
 Primær entity:
 
