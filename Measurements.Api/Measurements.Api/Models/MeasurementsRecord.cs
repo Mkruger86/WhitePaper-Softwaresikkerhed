@@ -2,6 +2,10 @@
 
 namespace Measurements.Api.Models;
 
+// Repræsenterer en måling, der er godkendt og gemt i systemet. 
+// I modsætning til MeasurementPayload indeholder klassen her også systemets egne oplysninger,
+// ergo id'et og tidspunktet målingen blev oprettet.
+
 public class MeasurementRecord
 {
     [JsonPropertyName("id")]

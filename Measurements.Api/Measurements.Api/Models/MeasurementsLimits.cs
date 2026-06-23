@@ -1,5 +1,8 @@
 ﻿namespace Measurements.Api.Validation;
 
+// Samler de faste regler for, hvor store og omfattende målinger må være. 
+// Bruges direkte af MeasurementValidator
+
 public static class MeasurementLimits
 {
     public const double MIN_COORD = -10.0;

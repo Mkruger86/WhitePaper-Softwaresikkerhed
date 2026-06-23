@@ -4,7 +4,12 @@ using Measurements.Api.Validation;
 
 namespace Measurements.Api.Services;
 
-public sealed class MeasurementService : IMeasurementService
+// Centrummet for oprettelse af målinger. 
+// Klassen modtager data fra API-laget, sender dem til validering og gemmer dem 
+// kun gennem repository-laget, hvis de opfylder reglerne. Den binder dermed 
+// validatoren og datalagringen sammen uden at blande deres ansvar sammen.
+
+public class MeasurementService : IMeasurementService
 {
     private readonly MeasurementValidator _validator;
     private readonly IMeasurementRepository _repository;

@@ -4,6 +4,12 @@ using Measurements.Api.Models;
 
 namespace Measurements.Api.Validation;
 
+// Validerer målingsdata fra Kollysion runtime i mobilapplikationen.
+// Klassen kontrollerer, at payloadet indeholder hits, at den angivne payloadstørrelse og repeatCount ikke overskrider de fastsatte grænser, og at der ikke sendes for mange hits.
+// Hvert ARHit kontrolleres derefter for gyldige koordinater, en tilladt hitType og et timestamp, der kan læses som en dato og et tidspunkt.
+// Hvis en regel ikke overholdes, returnerer klassen den første fundne fejl som et MeasurementValidationResult.
+// Hvis alle regler overholdes, returnerer klassen MeasurementValidationResult.Ok().
+
 public sealed class MeasurementValidator
 {
     private readonly HashSet<string> _allowedHitTypes;

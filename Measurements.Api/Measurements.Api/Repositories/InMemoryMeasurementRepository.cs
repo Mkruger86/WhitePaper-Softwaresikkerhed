@@ -3,6 +3,10 @@ using Measurements.Api.Models;
 
 namespace Measurements.Api.Repositories;
 
+// Den konkrete implementation af IMeasurementRepositoryHer, hvor målinger persisteres midlertidigt in-memory som nævnt. 
+// Den bruges efter validering og kan hente både enkelte målinger (Record) og samlet liste (Payload) 
+// Alle data eksisterer midlertidligt for nu og forsvinder når applikationen genstartes, givet dette er en testimplementering.
+
 public sealed class InMemoryMeasurementRepository : IMeasurementRepository
 {
     private readonly ConcurrentDictionary<Guid, MeasurementRecord> _records = new();
