@@ -52,13 +52,12 @@ Hver række angiver en inputklasse og et forventet testresultat.
 | EC-T1 | `hits` mangler | ValueError |
 | EC-T2 | `hits.length = 0` | ValueError |
 | EC-T3 | `hits` er ikke en liste | ValueError |
-| EC-T4 | `x`, `y` eller `z` mangler | ValueError |
-| EC-T5 | `x`, `y` eller `z` er string, bool eller null | ValueError |
-| EC-T6 | `x`, `y` eller `z` er `NaN`, `Infinity` eller ikke-finite | ValueError |
-| EC-T7 | `coordinatesValid = false`  | ValueError |
-| EC-T8 | `hitType` ukendt | ValueError |
-| EC-T9 | `timestampValid = false` | ValueError |
-| EC-T10 | Gyldig målepayload med gyldige AR hits | OK |
+| EC-T4 | `x`, `y` eller `z` er string, bool eller null | ValueError |
+| EC-T5 | `x`, `y` eller `z` er `NaN`, `Infinity` eller ikke-finite | ValueError |
+| EC-T6 | `coordinatesValid = false`  | ValueError |
+| EC-T7 | `hitType` ukendt | ValueError |
+| EC-T8 | `timestampValid = false` | ValueError |
+| EC-T9 | Gyldig målepayload med gyldige AR hits | OK |
 
 ### **2.2. DS1: store mængder falsk data**
 
